@@ -40,7 +40,9 @@
                         @endcan
                         <a href="{{ route('missions.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-800 text-white rounded-md text-sm hover:bg-gray-700">Missions</a>
                         <a href="{{ route('admin.techniciens.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-800 text-white rounded-md text-sm hover:bg-gray-700">Gérer les techniciens</a>
-                        <a href="{{ route('reference.search') }}" class="inline-flex items-center px-4 py-2 bg-white border rounded-md text-sm hover:bg-gray-50">Recherche Référence</a>
+                        @can('manage-references')
+                            <a href="{{ route('reference-points.create') }}" class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md text-sm hover:bg-green-700">+ Ajouter une référence</a>
+                        @endcan
                     </div>
                 </div>
             </div>

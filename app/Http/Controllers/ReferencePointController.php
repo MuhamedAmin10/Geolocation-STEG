@@ -9,9 +9,35 @@ use Illuminate\Support\Facades\Gate;
 
 class ReferencePointController extends Controller
 {
-    public function index()
+    public function create()
     {
-        return view('references.search');
+        Gate::authorize('manage-references');
+
+        return view('reference_points.create');
+    }
+
+    public function store(Request $request)
+    {
+        Gate::authorize('manage-references');
+
+        $data = $request->validate([
+            'reference'  => ['required', 'string', 'max:255', 'unique:reference_points,reference'],
+            'latitude'   => ['required', 'numeric', 'between:-90,90'],
+            'longitude'  => ['required', 'numeric', 'between:-180,180'],
+            'adresse'    => ['nullable', 'string'],
+            'gouvernorat'=> ['nullable', 'string', 'max:255'],
+            'delegation' => ['nullable', 'string', 'max:255'],
+            'precision_m'=> ['nullable', 'integer', 'min:0'],
+            'statut'     => ['required', 'string', 'in:à vérifier,validé,rejeté'],
+        ]);
+
+        $data['updated_by'] = $request->user()->id;
+
+        ReferencePoint::create($data);
+
+        return redirect()
+            ->route('admin.dashboard')
+            ->with('status', 'Référence créée avec succès.');
     }
 
     public function edit(Request $request, ReferencePoint $referencePoint)
@@ -32,7 +58,7 @@ class ReferencePointController extends Controller
         $referencePoint->save();
 
         return redirect()
-            ->route('reference.search')
+            ->route('dashboard')
             ->with('status', 'Référence mise à jour.');
     }
 
@@ -64,7 +90,7 @@ class ReferencePointController extends Controller
         $referencePoint->delete();
 
         return redirect()
-            ->route('reference.search')
+            ->route('dashboard')
             ->with('status', 'Référence archivée.');
     }
 }

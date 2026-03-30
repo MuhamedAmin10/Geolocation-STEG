@@ -9,21 +9,31 @@ use App\Http\Controllers\Admin\TechnicienController as AdminTechnicienController
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return redirect()->route('reference.search');
+    return redirect()->route('dashboard');
 });
 
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
+// Legacy redirect: old search URL now goes to dashboard
+Route::get('/references/search', function () {
+    return redirect()->route('dashboard');
+})->middleware(['auth'])->name('reference.search');
+
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    Route::get('/references/search', [ReferencePointController::class, 'index'])->name('reference.search');
     Route::get('/api/references/{reference}', [ReferencePointController::class, 'showByReference'])->name('api.reference.show');
 
+    Route::get('/reference-points/create', [ReferencePointController::class, 'create'])
+        ->middleware('can:manage-references')
+        ->name('reference-points.create');
+    Route::post('/reference-points', [ReferencePointController::class, 'store'])
+        ->middleware('can:manage-references')
+        ->name('reference-points.store');
     Route::get('/reference-points/{referencePoint}/edit', [ReferencePointController::class, 'edit'])
         ->name('reference-points.edit');
     Route::put('/reference-points/{referencePoint}', [ReferencePointController::class, 'update'])

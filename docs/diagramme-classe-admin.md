@@ -148,7 +148,8 @@ classDiagram
     MissionAssignmentController ..> Technicien : utilise
     MissionAssignmentController ..> Affectation : crée
 
-    %% ============ NOTES ============
+    %% ============ NOTES ============    [ Show ]  [ SMTP Settings ]  [ ...  ]
+              ^^^ click this
     
     note for User "Rôles: admin, technicien, user
     Authentification Laravel Breeze"

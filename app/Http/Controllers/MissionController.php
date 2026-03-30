@@ -5,12 +5,14 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreMissionRequest;
 use App\Http\Requests\UpdateMissionRequest;
 use App\Http\Requests\UpdateMissionWorkRequest;
+use App\Mail\MissionAssignedMail;
 use App\Models\Affectation;
 use App\Models\Mission;
 use App\Models\ReferencePoint;
 use App\Models\Technicien;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Mail;
 
 class MissionController extends Controller
 {
@@ -87,12 +89,23 @@ class MissionController extends Controller
         $mission = Mission::query()->create($data);
 
         if ($technicienId) {
-            Affectation::query()->create([
+            $affectation = Affectation::query()->create([
                 'mission_id' => $mission->id,
                 'technicien_id' => (int) $technicienId,
                 'assigned_by' => $request->user()->id,
                 'assigned_at' => now(),
             ]);
+
+            $affectation->load([
+                'mission.referencePoint',
+                'technicien.user',
+                'assignedBy',
+            ]);
+
+            $technicienEmail = $affectation->technicien->user->email ?? null;
+            if ($technicienEmail) {
+                Mail::to($technicienEmail)->send(new MissionAssignedMail($affectation));
+            }
         }
 
         return redirect()

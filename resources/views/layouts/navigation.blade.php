@@ -25,10 +25,6 @@
                     <x-nav-link :href="route('missions.index')" :active="request()->routeIs('missions.*')">
                         {{ __('Missions') }}
                     </x-nav-link>
-
-                    <x-nav-link :href="route('reference.search')" :active="request()->routeIs('reference.search')">
-                        {{ __('Recherche Référence') }}
-                    </x-nav-link>
                 </div>
             </div>
 
@@ -93,10 +89,6 @@
 
             <x-responsive-nav-link :href="route('missions.index')" :active="request()->routeIs('missions.*')">
                 {{ __('Missions') }}
-            </x-responsive-nav-link>
-
-            <x-responsive-nav-link :href="route('reference.search')" :active="request()->routeIs('reference.search')">
-                {{ __('Recherche Référence') }}
             </x-responsive-nav-link>
         </div>
 
