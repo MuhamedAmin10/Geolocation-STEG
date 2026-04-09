@@ -1,3 +1,53 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+	:root {
+		--steg-blue: #0057b8;
+		--steg-blue-strong: #00489a;
+		--steg-red: #e30613;
+		--steg-surface: #f3f7fb;
+	}
+
+	body {
+		@apply bg-slate-100 text-slate-900;
+	}
+}
+
+@layer components {
+	.brand-shell {
+		background: linear-gradient(180deg, #f7fbff 0%, #eef5fc 100%);
+	}
+
+	.brand-card {
+		@apply rounded-2xl border border-slate-200 bg-white shadow-sm;
+	}
+
+	.brand-title {
+		@apply font-semibold tracking-tight text-slate-900;
+	}
+
+	/* Force readable dropdown surfaces for Tom Select lists. */
+	.ts-wrapper .ts-control {
+		@apply bg-white text-slate-800 border-slate-300 rounded-xl shadow-sm;
+	}
+
+	.ts-wrapper .ts-control input {
+		@apply text-slate-800;
+	}
+
+	.ts-wrapper .ts-dropdown {
+		@apply bg-white border border-slate-300 rounded-xl shadow-lg;
+	}
+
+	.ts-wrapper .ts-dropdown .option,
+	.ts-wrapper .ts-dropdown .create {
+		@apply bg-white text-slate-800;
+	}
+
+	.ts-wrapper .ts-dropdown .active,
+	.ts-wrapper .ts-dropdown .option:hover {
+		@apply bg-slate-100 text-slate-900;
+	}
+}

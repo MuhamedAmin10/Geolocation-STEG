@@ -42,13 +42,15 @@
                 </div>
 
                 <div id="actions" class="mt-4 hidden flex flex-wrap gap-3">
-                    <a id="createMissionLink" href="#" 
-                       class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800 transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg font-medium flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                        </svg>
-                        Créer une mission
-                    </a>
+                    @can('manage-missions')
+                        <a id="createMissionLink" href="#" 
+                           class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800 transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg font-medium flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            Créer une mission
+                        </a>
+                    @endcan
                     <a id="historyLink" href="#" 
                        class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg font-medium flex items-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -56,6 +58,23 @@
                         </svg>
                         Historique des missions
                     </a>
+                    @if (auth()->user()?->role === 'Technicien')
+                        <a id="historyForMeLink" href="{{ route('missions.index', ['mine' => 1]) }}"
+                           class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 text-white hover:from-indigo-700 hover:to-indigo-800 transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg font-medium flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-3-3v6m8 4H4a1 1 0 01-1-1V6a1 1 0 011-1h5.586a1 1 0 01.707.293l1.414 1.414A1 1 0 0012.414 7H20a1 1 0 011 1v10a1 1 0 01-1 1z"></path>
+                            </svg>
+                            Historique pour moi
+                        </a>
+
+                        <a id="analysisLink" href="{{ route('missions.analysis') }}"
+                           class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white hover:from-amber-600 hover:to-amber-700 transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg font-medium flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3v18m-4-8h8m6 8H3a1 1 0 01-1-1V4a1 1 0 011-1h18a1 1 0 011 1v16a1 1 0 01-1 1z"></path>
+                            </svg>
+                            Analyse de travail
+                        </a>
+                    @endif
                     <a id="editRefLink" href="#" 
                        class="hidden px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-purple-700 text-white hover:from-purple-700 hover:to-purple-800 transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg font-medium flex items-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -123,6 +142,8 @@
             const historyLink = document.getElementById('historyLink');
             const editRefLink = document.getElementById('editRefLink');
             const canManageReferences = @json(auth()->user()?->can('manage-references') ?? false);
+            const canManageMissions = @json(auth()->user()?->can('manage-missions') ?? false);
+            const isTechnicien = @json((auth()->user()?->role ?? null) === 'Technicien');
 
             function updateStatus(message, isError = false, isLoading = false) {
                 const status = document.getElementById('status');
@@ -140,15 +161,22 @@
             function hideActions() {
                 actionsEl.classList.add('hidden');
                 editRefLink.classList.add('hidden');
-                createMissionLink.href = '#';
+                if (createMissionLink) {
+                    createMissionLink.href = '#';
+                }
                 historyLink.href = '#';
                 editRefLink.href = '#';
             }
 
             function showActions(referencePointId) {
                 actionsEl.classList.remove('hidden');
-                createMissionLink.href = `{{ route('missions.create') }}?reference_id=${encodeURIComponent(referencePointId)}`;
-                historyLink.href = `{{ route('missions.index') }}?reference_id=${encodeURIComponent(referencePointId)}`;
+                if (canManageMissions && createMissionLink) {
+                    createMissionLink.href = `{{ route('missions.create') }}?reference_id=${encodeURIComponent(referencePointId)}`;
+                }
+
+                historyLink.href = isTechnicien
+                    ? `{{ route('missions.index') }}?mine=1&reference_id=${encodeURIComponent(referencePointId)}`
+                    : `{{ route('missions.index') }}?reference_id=${encodeURIComponent(referencePointId)}`;
 
                 if (canManageReferences) {
                     editRefLink.classList.remove('hidden');

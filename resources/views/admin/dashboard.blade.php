@@ -39,6 +39,7 @@
                             <a href="{{ route('missions.create') }}" class="inline-flex items-center px-4 py-2 bg-gray-800 text-white rounded-md text-sm hover:bg-gray-700">Créer une mission</a>
                         @endcan
                         <a href="{{ route('missions.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-800 text-white rounded-md text-sm hover:bg-gray-700">Missions</a>
+                        <a href="{{ route('admin.analysis') }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md text-sm hover:bg-indigo-700">Analyse admin</a>
                         <a href="{{ route('admin.techniciens.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-800 text-white rounded-md text-sm hover:bg-gray-700">Gérer les techniciens</a>
                         @can('manage-references')
                             <a href="{{ route('reference-points.create') }}" class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md text-sm hover:bg-green-700">+ Ajouter une référence</a>

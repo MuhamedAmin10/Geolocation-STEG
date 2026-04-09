@@ -15,12 +15,39 @@ class StoreMissionRequest extends FormRequest
     {
         return [
             'reference_id' => ['required', 'integer', 'exists:reference_points,id'],
-            'type_mission' => ['required', 'string', 'max:255'],
-            'priorite' => ['required', 'string', 'max:255'],
+            'type_mission' => ['required', 'string', 'in:Branchement,Coupure,Réparation,Contrôle,Autre'],
+            'priorite' => ['required', 'string', 'in:Basse,Normale,Haute,Urgente'],
             'description' => ['nullable', 'string'],
-            'statut' => ['required', 'string', 'max:255'],
+            'statut' => ['required', 'string', 'in:Créée,Assignée,En cours,Bloquée,Terminée,Annulée'],
             'due_at' => ['nullable', 'date'],
-            'technicien_id' => ['nullable', 'integer', 'exists:techniciens,id'],
+            'technicien_id' => ['required', 'integer', 'exists:techniciens,id'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'reference_id.required' => 'La reference est obligatoire.',
+            'reference_id.exists' => 'La reference selectionnee est introuvable.',
+            'type_mission.in' => 'Le type de mission selectionne est invalide.',
+            'priorite.in' => 'La priorite selectionnee est invalide.',
+            'statut.in' => 'Le statut selectionne est invalide.',
+            'due_at.date' => 'La date d\'echeance est invalide.',
+            'technicien_id.required' => 'Le technicien est obligatoire.',
+            'technicien_id.exists' => 'Le technicien selectionne est introuvable.',
+        ];
+    }
+
+    public function attributes(): array
+    {
+        return [
+            'reference_id' => 'reference',
+            'type_mission' => 'type de mission',
+            'priorite' => 'priorite',
+            'description' => 'description',
+            'statut' => 'statut',
+            'due_at' => 'date d\'echeance',
+            'technicien_id' => 'technicien',
         ];
     }
 }

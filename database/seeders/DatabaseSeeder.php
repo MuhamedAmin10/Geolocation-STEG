@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\ReferencePoint;
 use App\Models\Technicien;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
@@ -15,41 +16,55 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $defaultPassword = env('DEFAULT_USER_PASSWORD', 'password');
+
+        $adminEmail = env('DEFAULT_ADMIN_EMAIL', 'admin@steg.tn');
+        $adminName = env('DEFAULT_ADMIN_NAME', 'Admin STEG');
+
+        $dispatcherEmail = env('DEFAULT_DISPATCHER_EMAIL', 'dispatcher@steg.tn');
+        $dispatcherName = env('DEFAULT_DISPATCHER_NAME', 'Dispatcher STEG');
+
+        $tech1Email = env('DEFAULT_TECH1_EMAIL', 'tech1@steg.tn');
+        $tech1Name = env('DEFAULT_TECH1_NAME', 'Technicien 1');
+
+        $tech2Email = env('DEFAULT_TECH2_EMAIL', 'tech2@steg.tn');
+        $tech2Name = env('DEFAULT_TECH2_NAME', 'Technicien 2');
+
         $admin = User::query()->updateOrCreate(
-            ['email' => 'admin@steg.tn'],
+            ['email' => $adminEmail],
             [
-                'name' => 'Admin STEG',
-                'password' => Hash::make('password'),
+                'name' => $adminName,
+                'password' => Hash::make($defaultPassword),
                 'role' => 'Admin',
                 'active' => true,
             ]
         );
 
         User::query()->updateOrCreate(
-            ['email' => 'dispatcher@steg.tn'],
+            ['email' => $dispatcherEmail],
             [
-                'name' => 'Dispatcher STEG',
-                'password' => Hash::make('password'),
+                'name' => $dispatcherName,
+                'password' => Hash::make($defaultPassword),
                 'role' => 'Dispatcher',
                 'active' => true,
             ]
         );
 
         $techUser1 = User::query()->updateOrCreate(
-            ['email' => 'tech1@steg.tn'],
+            ['email' => $tech1Email],
             [
-                'name' => 'Technicien 1',
-                'password' => Hash::make('password'),
+                'name' => $tech1Name,
+                'password' => Hash::make($defaultPassword),
                 'role' => 'Technicien',
                 'active' => true,
             ]
         );
 
         $techUser2 = User::query()->updateOrCreate(
-            ['email' => 'tech2@steg.tn'],
+            ['email' => $tech2Email],
             [
-                'name' => 'Technicien 2',
-                'password' => Hash::make('password'),
+                'name' => $tech2Name,
+                'password' => Hash::make($defaultPassword),
                 'role' => 'Technicien',
                 'active' => true,
             ]
@@ -101,6 +116,10 @@ class DatabaseSeeder extends Seeder
                     'updated_by' => $admin->id,
                 ]
             );
+        }
+
+        if (App::environment('production')) {
+            $this->command?->warn('Seed completed in production. Rotate DEFAULT_USER_PASSWORD or remove it after first bootstrap.');
         }
     }
 }

@@ -11,8 +11,16 @@ export default {
 
     theme: {
         extend: {
+            colors: {
+                brand: {
+                    primary: '#0057b8',
+                    primaryDark: '#00489a',
+                    accent: '#e30613',
+                    surface: '#f3f7fb',
+                },
+            },
             fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                sans: ['IBM Plex Sans', ...defaultTheme.fontFamily.sans],
             },
         },
     },
