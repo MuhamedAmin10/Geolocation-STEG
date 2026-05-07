@@ -1,4 +1,10 @@
 <x-guest-layout>
+    <div class="mb-6 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Nouveau client</p>
+        <h2 class="mt-1 text-lg font-bold text-slate-900">Créer un compte client STEG</h2>
+        <p class="mt-2 text-sm text-slate-600">Ce compte vous donne accès au portail client pour déposer une réclamation et suivre son traitement.</p>
+    </div>
+
     <form method="POST" action="{{ route('register') }}">
         @csrf
 
@@ -45,7 +51,7 @@
             </a>
 
             <x-primary-button class="ms-4">
-                {{ __('Register') }}
+                {{ __('Créer le compte client') }}
             </x-primary-button>
         </div>
     </form>

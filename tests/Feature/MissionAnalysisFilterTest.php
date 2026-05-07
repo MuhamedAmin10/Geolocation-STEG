@@ -161,4 +161,23 @@ class MissionAnalysisFilterTest extends TestCase
         $response->assertOk();
         $response->assertHeader('content-type', 'application/pdf');
     }
+
+    public function test_admin_can_access_analysis_page_and_export_pdf(): void
+    {
+        $admin = User::factory()->create(['role' => 'Admin']);
+
+        $response = $this->actingAs($admin)->get(route('missions.analysis', [
+            'period' => '30d',
+        ]));
+
+        $response->assertOk();
+        $response->assertSee('Analyse simple de l\'activite');
+
+        $exportResponse = $this->actingAs($admin)->get(route('missions.analysis.export', [
+            'period' => '30d',
+        ]));
+
+        $exportResponse->assertOk();
+        $exportResponse->assertHeader('content-type', 'application/pdf');
+    }
 }

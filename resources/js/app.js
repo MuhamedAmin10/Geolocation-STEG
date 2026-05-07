@@ -14,6 +14,42 @@ window.Alpine = Alpine;
 window.L = L;
 window.TomSelect = TomSelect;
 
+window.sidebarLayout = function sidebarLayout() {
+	return {
+		sidebarCollapsed: false,
+		mobileOpen: false,
+		isDark: false,
+
+		init() {
+			this.sidebarCollapsed = localStorage.getItem('steg.sidebar.collapsed') === '1';
+			this.isDark = localStorage.getItem('steg.theme') === 'dark';
+			this.applyTheme();
+
+			window.addEventListener('keydown', (event) => {
+				if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'b') {
+					event.preventDefault();
+					this.toggleSidebar();
+				}
+			});
+		},
+
+		toggleSidebar() {
+			this.sidebarCollapsed = !this.sidebarCollapsed;
+			localStorage.setItem('steg.sidebar.collapsed', this.sidebarCollapsed ? '1' : '0');
+		},
+
+		toggleTheme() {
+			this.isDark = !this.isDark;
+			localStorage.setItem('steg.theme', this.isDark ? 'dark' : 'light');
+			this.applyTheme();
+		},
+
+		applyTheme() {
+			document.documentElement.classList.toggle('theme-dark', this.isDark);
+		},
+	};
+};
+
 L.Icon.Default.mergeOptions({
 	iconRetinaUrl,
 	iconUrl,

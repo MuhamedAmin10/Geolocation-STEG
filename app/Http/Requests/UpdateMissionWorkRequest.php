@@ -16,6 +16,8 @@ class UpdateMissionWorkRequest extends FormRequest
         return [
             'statut' => ['required', 'string', 'in:En cours,Bloquée,Terminée'],
             'rapport' => ['nullable', 'string'],
+            'photos' => ['nullable', 'array', 'max:10'],
+            'photos.*' => ['image', 'mimes:jpg,jpeg,png', 'max:10240'],
         ];
     }
 }

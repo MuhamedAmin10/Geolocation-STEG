@@ -1,6 +1,7 @@
 @php
     $types = ['Branchement', 'Coupure', 'Réparation', 'Contrôle', 'Autre'];
     $priorites = ['Basse', 'Normale', 'Haute', 'Urgente'];
+    $slaLevels = ['Bronze', 'Silver', 'Gold', 'Platinum'];
     $statuts = ['Créée', 'Assignée', 'En cours', 'Bloquée', 'Terminée', 'Annulée'];
     $labelClass = 'text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-slate-600';
     $controlClass = 'mt-2 block w-full rounded-xl border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm transition focus:border-brand-primary focus:ring-brand-primary';
@@ -62,6 +63,27 @@
         <x-input-label for="due_at" :value="__('Échéance (optionnel)')" class="{{ $labelClass }}" />
         <x-text-input id="due_at" name="due_at" type="datetime-local" class="{{ $controlClass }}" :value="old('due_at', isset($mission) && $mission->due_at ? $mission->due_at->format('Y-m-d\\TH:i') : '')" />
         <x-input-error :messages="$errors->get('due_at')" class="mt-2" />
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+            <x-input-label for="estimated_duration" :value="__('Durée estimée (minutes)')" class="{{ $labelClass }}" />
+            <x-text-input id="estimated_duration" name="estimated_duration" type="number" min="1" step="1" class="{{ $controlClass }}" :value="old('estimated_duration', $mission->estimated_duration ?? '')" />
+            <x-input-error :messages="$errors->get('estimated_duration')" class="mt-2" />
+            <p class="mt-2 text-xs text-slate-500">Base utilisée pour le score d'efficacité et les alertes overtime.</p>
+        </div>
+
+        <div>
+            <x-input-label for="sla_level" :value="__('Niveau SLA')" class="{{ $labelClass }}" />
+            <select id="sla_level" name="sla_level" class="{{ $controlClass }}">
+                @foreach ($slaLevels as $sla)
+                    <option value="{{ $sla }}" {{ old('sla_level', $mission->sla_level ?? 'Bronze') === $sla ? 'selected' : '' }}>
+                        {{ $sla }}
+                    </option>
+                @endforeach
+            </select>
+            <x-input-error :messages="$errors->get('sla_level')" class="mt-2" />
+        </div>
     </div>
 
     <div>

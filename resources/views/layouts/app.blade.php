@@ -4,6 +4,10 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
+        <meta name="theme-color" content="#0057b8">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="default">
+        <link rel="manifest" href="{{ asset('manifest.json') }}">
 
         <title>{{ config('app.name', 'Laravel') }}</title>
 
@@ -16,26 +20,58 @@
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="font-sans antialiased text-slate-900">
-        <div class="min-h-screen brand-shell">
-            @include('layouts.navigation')
+    <body class="font-sans antialiased text-slate-900" x-data="sidebarLayout('{{ auth()->user()?->role }}')" x-init="init()" :class="isDark ? 'theme-dark' : 'theme-light'">
+        <div class="brand-shell min-h-screen lg:flex">
+            <div class="hidden lg:sticky lg:top-0 lg:block lg:h-screen lg:shrink-0">
+                @include('layouts.sidebar')
+            </div>
 
-            <!-- Page Heading -->
-            @isset($header)
-                <header class="bg-white shadow">
-                    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                        {{ $header }}
-                    </div>
-                </header>
-            @endisset
+            <div
+                x-show="mobileOpen"
+                x-transition.opacity
+                class="fixed inset-0 z-40 bg-slate-950/60 lg:hidden"
+                @click="mobileOpen = false"
+            ></div>
 
-            <!-- Page Content -->
-            <main>
-                {{ $slot }}
-            </main>
+            <div x-show="mobileOpen" x-transition class="fixed inset-y-0 left-0 z-50 lg:hidden">
+                @include('layouts.sidebar')
+            </div>
+
+            <div class="min-w-0 flex-1">
+                <div class="flex items-center justify-between border-b border-slate-200 bg-white/80 px-4 py-3 backdrop-blur lg:hidden">
+                    <button
+                        type="button"
+                        class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700"
+                        @click="mobileOpen = true"
+                    >
+                        =
+                    </button>
+                    <div class="text-sm font-semibold text-slate-800">Mission Manager</div>
+                    <a href="{{ route('profile.edit') }}" class="text-sm text-slate-600">{{ auth()->user()?->name }}</a>
+                </div>
+
+                @isset($header)
+                    <header class="border-b border-slate-200 bg-white/90 shadow-sm">
+                        <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+                            {{ $header }}
+                        </div>
+                    </header>
+                @endisset
+
+                <main>
+                    {{ $slot }}
+                </main>
+            </div>
         </div>
 
         @livewireScripts
+        <script>
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('/sw.js').catch(() => {});
+                });
+            }
+        </script>
         @stack('scripts')
     </body>
 </html>

@@ -11,6 +11,8 @@ use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
 {
+    private const CLIENT_ROLE = 'Client';
+
     /**
      * Display the login view.
      */
@@ -28,7 +30,19 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        $user = $request->user();
+
+        if ($this->isClient($user?->role)) {
+            // Do not use intended URL for clients; they can be redirected to admin-only pages.
+            return redirect()->route('client.portal');
+        }
+
         return redirect()->intended(route('dashboard', absolute: false));
+    }
+
+    private function isClient(?string $role): bool
+    {
+        return strcasecmp(trim((string) $role), self::CLIENT_ROLE) === 0;
     }
 
     /**

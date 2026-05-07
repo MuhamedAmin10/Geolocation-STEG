@@ -126,6 +126,8 @@
                 <th>Haute priorite resolue</th>
                 <th>Temps moyen (h)</th>
                 <th>Terminees ce mois</th>
+                <th>Utilisation temps</th>
+                <th>Overtime</th>
             </tr>
         </thead>
         <tbody>
@@ -136,7 +138,30 @@
                 <td>{{ $highPriorityResolutionRate }}%</td>
                 <td>{{ $avgResolutionHours }}</td>
                 <td>{{ $currentMonthCompleted }}</td>
+                <td>{{ $timeUtilizationRate }}%</td>
+                <td>{{ $overtimeCount }} ({{ $overtimeRate }}%)</td>
             </tr>
+        </tbody>
+    </table>
+
+    <table class="grid">
+        <thead>
+            <tr>
+                <th>Type mission</th>
+                <th>Temps moyen (min)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse ($avgCompletionByTypeLabels as $index => $label)
+                <tr>
+                    <td>{{ $label }}</td>
+                    <td>{{ $avgCompletionByTypeData[$index] ?? 0 }}</td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="2">Aucune donnee de duree par type.</td>
+                </tr>
+            @endforelse
         </tbody>
     </table>
 

@@ -3,6 +3,10 @@
 @tailwind utilities;
 
 @layer base {
+	[x-cloak] {
+		display: none !important;
+	}
+
 	:root {
 		--steg-blue: #0057b8;
 		--steg-blue-strong: #00489a;
@@ -13,6 +17,12 @@
 	body {
 		@apply bg-slate-100 text-slate-900;
 	}
+
+	.theme-dark body,
+	body.theme-dark {
+		background: #020617;
+		color: #e2e8f0;
+	}
 }
 
 @layer components {
@@ -20,8 +30,16 @@
 		background: linear-gradient(180deg, #f7fbff 0%, #eef5fc 100%);
 	}
 
+	.theme-dark .brand-shell {
+		background: radial-gradient(circle at 0% 0%, #1e293b 0%, #020617 45%, #020617 100%);
+	}
+
 	.brand-card {
 		@apply rounded-2xl border border-slate-200 bg-white shadow-sm;
+	}
+
+	.theme-dark .brand-card {
+		@apply border-slate-700 bg-slate-900 text-slate-100;
 	}
 
 	.brand-title {

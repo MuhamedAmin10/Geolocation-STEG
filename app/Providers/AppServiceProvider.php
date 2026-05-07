@@ -23,28 +23,35 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Gate::before(function (User $user, string $ability): ?bool {
+            return strcasecmp($user->role ?? '', 'Admin') === 0 ? true : null;
+        });
+
         Gate::define('access-admin', function (User $user): bool {
-            return $user->role === 'Admin';
+            return strcasecmp($user->role ?? '', 'Admin') === 0;
         });
 
         Gate::define('manage-techniciens', function (User $user): bool {
-            return $user->role === 'Admin';
+            return strcasecmp($user->role ?? '', 'Admin') === 0;
         });
 
         Gate::define('manage-missions', function (User $user): bool {
-            return in_array($user->role, ['Admin', 'Dispatcher'], true);
+            $role = strtolower(trim((string) ($user->role ?? '')));
+            return in_array($role, ['admin', 'dispatcher'], true);
         });
 
         Gate::define('manage-references', function (User $user): bool {
-            return in_array($user->role, ['Admin', 'Dispatcher'], true);
+            $role = strtolower(trim((string) ($user->role ?? '')));
+            return in_array($role, ['admin', 'dispatcher'], true);
         });
 
         Gate::define('view-mission', function (User $user, Mission $mission): bool {
-            if (in_array($user->role, ['Admin', 'Dispatcher'], true)) {
+            $role = strtolower(trim((string) ($user->role ?? '')));
+            if (in_array($role, ['admin', 'dispatcher'], true)) {
                 return true;
             }
 
-            if ($user->role !== 'Technicien') {
+            if ($role !== 'technicien') {
                 return false;
             }
 
@@ -62,7 +69,8 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Gate::define('work-mission', function (User $user, Mission $mission): bool {
-            if ($user->role !== 'Technicien') {
+            $role = strtolower(trim((string) ($user->role ?? '')));
+            if ($role !== 'technicien') {
                 return false;
             }
 

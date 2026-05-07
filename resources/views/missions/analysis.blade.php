@@ -4,8 +4,8 @@
             <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
                     <p class="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-100">Tableau de performance</p>
-                    <h2 class="mt-2 text-2xl font-bold leading-tight md:text-3xl">Analyse de travail technicien</h2>
-                    <p class="mt-2 text-sm text-cyan-100/90">Lecture simple de votre activite: volume, qualite, delais et evolution mensuelle.</p>
+                    <h2 class="mt-2 text-2xl font-bold leading-tight md:text-3xl">Analyse missions et temps de travail</h2>
+                    <p class="mt-2 text-sm text-cyan-100/90">Volume, delais, efficacite, surcharge et utilisation du temps sur la periode selectionnee.</p>
                 </div>
 
                 <div class="space-y-2">
@@ -124,6 +124,29 @@
                 </article>
             </section>
 
+            <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <article class="kpi-card">
+                    <p class="kpi-label">Taux utilisation temps</p>
+                    <p class="kpi-value text-cyan-700">{{ $timeUtilizationRate }}%</p>
+                    <p class="mt-2 text-xs text-slate-500">Travail actif vs pause + break.</p>
+                </article>
+                <article class="kpi-card kpi-card-amber">
+                    <p class="kpi-label">Overtime missions</p>
+                    <p class="kpi-value text-amber-700">{{ $overtimeCount }}</p>
+                    <p class="mt-2 text-xs text-slate-500">Depassement &gt; 20% de l'estime.</p>
+                </article>
+                <article class="kpi-card">
+                    <p class="kpi-label">Taux overtime</p>
+                    <p class="kpi-value text-rose-700">{{ $overtimeRate }}%</p>
+                    <p class="mt-2 text-xs text-slate-500">Missions terminees avec estimation.</p>
+                </article>
+                <article class="kpi-card kpi-card-slate">
+                    <p class="kpi-label">Travail / Idle / Break</p>
+                    <p class="kpi-value text-slate-900">{{ $workingMinutes }} / {{ $idleMinutes }} / {{ $breakMinutes }}</p>
+                    <p class="mt-2 text-xs text-slate-500">Minutes sur la periode.</p>
+                </article>
+            </section>
+
             <section class="grid grid-cols-1 gap-5 xl:grid-cols-12">
                 <article class="panel-card xl:col-span-4">
                     <div class="panel-head">
@@ -201,6 +224,61 @@
                         <canvas id="trendChart"></canvas>
                     </div>
                 </article>
+            </section>
+
+            <section class="grid grid-cols-1 gap-5 xl:grid-cols-12">
+                <article class="panel-card xl:col-span-6">
+                    <div class="panel-head">
+                        <h3>Temps moyen par type mission</h3>
+                        <p>Comparaison des durees de completion par categorie.</p>
+                    </div>
+                    <div class="panel-body h-[320px]">
+                        <canvas id="typeDurationChart"></canvas>
+                    </div>
+                </article>
+
+                <article class="panel-card xl:col-span-6">
+                    <div class="panel-head">
+                        <h3>Heures de pointe</h3>
+                        <p>Moments de la journee avec le plus d'activites start/resume.</p>
+                    </div>
+                    <div class="panel-body h-[320px]">
+                        <canvas id="peakHoursChart"></canvas>
+                    </div>
+                </article>
+            </section>
+
+            <section class="panel-card">
+                <div class="panel-head">
+                    <h3>Classement productivite techniciens</h3>
+                    <p>Missions terminees par heure de travail actif.</p>
+                </div>
+                <div class="overflow-x-auto rounded-b-2xl">
+                    <table class="min-w-full divide-y divide-slate-200">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Technicien</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Missions terminees</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Heures</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Missions / heure</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 bg-white">
+                            @forelse ($productivityRanking as $row)
+                                <tr>
+                                    <td class="px-4 py-3 text-sm text-slate-800">{{ $row['technician'] }}</td>
+                                    <td class="px-4 py-3 text-sm font-semibold text-slate-900">{{ $row['missions_completed'] }}</td>
+                                    <td class="px-4 py-3 text-sm text-slate-700">{{ $row['hours'] }}</td>
+                                    <td class="px-4 py-3 text-sm text-emerald-700">{{ $row['missions_per_hour'] }}</td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="4" class="px-4 py-6 text-center text-sm text-slate-500">Aucune donnee de productivite.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </section>
 
             <section class="grid grid-cols-1 gap-5 xl:grid-cols-12">
@@ -485,7 +563,9 @@
 
                     const trendCtx = document.getElementById('trendChart');
                     const statusCtx = document.getElementById('statusChart');
-                    if (!trendCtx || !statusCtx) {
+                    const typeDurationCtx = document.getElementById('typeDurationChart');
+                    const peakHoursCtx = document.getElementById('peakHoursChart');
+                    if (!trendCtx || !statusCtx || !typeDurationCtx || !peakHoursCtx) {
                         return;
                     }
 
@@ -495,6 +575,10 @@
 
                     const statusLabels = @json($statusLabels);
                     const statusData = @json($statusData);
+                    const avgCompletionByTypeLabels = @json($avgCompletionByTypeLabels);
+                    const avgCompletionByTypeData = @json($avgCompletionByTypeData);
+                    const peakHoursLabels = @json($peakHoursLabels);
+                    const peakHoursData = @json($peakHoursData);
 
                     new window.Chart(trendCtx, {
                         type: 'line',
@@ -569,6 +653,62 @@
                                     position: 'bottom',
                                     labels: { boxWidth: 10, boxHeight: 10, usePointStyle: true },
                                 },
+                            },
+                        },
+                    });
+
+                    new window.Chart(typeDurationCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: avgCompletionByTypeLabels,
+                            datasets: [
+                                {
+                                    label: 'Temps moyen (min)',
+                                    data: avgCompletionByTypeData,
+                                    backgroundColor: 'rgba(14, 116, 144, 0.75)',
+                                    borderRadius: 8,
+                                },
+                            ],
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false },
+                            },
+                            scales: {
+                                y: { beginAtZero: true, ticks: { precision: 0 } },
+                                x: { grid: { display: false } },
+                            },
+                        },
+                    });
+
+                    new window.Chart(peakHoursCtx, {
+                        type: 'line',
+                        data: {
+                            labels: peakHoursLabels,
+                            datasets: [
+                                {
+                                    label: 'Activite start/resume',
+                                    data: peakHoursData,
+                                    borderColor: '#f97316',
+                                    backgroundColor: 'rgba(249, 115, 22, 0.18)',
+                                    borderWidth: 2,
+                                    tension: 0.3,
+                                    fill: true,
+                                    pointRadius: 0,
+                                },
+                            ],
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false },
+                            },
+                            scales: {
+                                y: { beginAtZero: true, ticks: { precision: 0 } },
+                                x: { grid: { display: false }, ticks: { maxTicksLimit: 8 } },
                             },
                         },
                     });

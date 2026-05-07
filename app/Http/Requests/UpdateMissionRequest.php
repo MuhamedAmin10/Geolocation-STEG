@@ -22,6 +22,8 @@ class UpdateMissionRequest extends FormRequest
             'due_at' => ['nullable', 'date'],
             'started_at' => ['nullable', 'date'],
             'completed_at' => ['nullable', 'date'],
+            'estimated_duration' => ['nullable', 'integer', 'min:1', 'max:10080'],
+            'sla_level' => ['nullable', 'string', 'in:Bronze,Silver,Gold,Platinum'],
             'technicien_id' => ['required', 'integer', 'exists:techniciens,id'],
         ];
     }
@@ -37,6 +39,9 @@ class UpdateMissionRequest extends FormRequest
             'due_at.date' => 'La date d\'echeance est invalide.',
             'started_at.date' => 'La date de debut est invalide.',
             'completed_at.date' => 'La date de fin est invalide.',
+            'estimated_duration.integer' => 'La duree estimee doit etre un nombre entier de minutes.',
+            'estimated_duration.min' => 'La duree estimee minimale est de 1 minute.',
+            'sla_level.in' => 'Le niveau SLA selectionne est invalide.',
             'technicien_id.required' => 'Le technicien est obligatoire.',
             'technicien_id.exists' => 'Le technicien selectionne est introuvable.',
         ];
@@ -53,6 +58,8 @@ class UpdateMissionRequest extends FormRequest
             'due_at' => 'date d\'echeance',
             'started_at' => 'date de debut',
             'completed_at' => 'date de fin',
+            'estimated_duration' => 'duree estimee',
+            'sla_level' => 'niveau SLA',
             'technicien_id' => 'technicien',
         ];
     }
