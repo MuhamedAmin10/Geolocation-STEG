@@ -367,6 +367,7 @@ class MissionController extends Controller
             'referencePoint',
             'creator:id,name,email',
             'affectations.technicien.user',
+            'referenceScans.technicien.user',
             'timeLogs' => fn ($q) => $q->latest('logged_at')->limit(25),
             'attachments.uploader:id,name',
         ]);

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
+use App\Models\MissionReferenceScan;
 
 class Mission extends Model
 {
@@ -74,6 +75,16 @@ class Mission extends Model
     public function attachments()
     {
         return $this->hasMany(MissionAttachment::class)->latest();
+    }
+
+    public function referenceScans()
+    {
+        return $this->hasMany(MissionReferenceScan::class)->latest('scanned_at');
+    }
+
+    public function latestReferenceScan()
+    {
+        return $this->hasOne(MissionReferenceScan::class)->latestOfMany('scanned_at');
     }
 
     public function clientFeedback()

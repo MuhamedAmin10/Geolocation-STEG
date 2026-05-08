@@ -30,7 +30,9 @@
                         x-data="missionTimerWidget({
                             missionId: {{ $mission->id }},
                             actionUrl: '{{ route('missions.time-log', $mission) }}',
+                            scanReferenceUrl: '{{ route('missions.reference-scans', $mission) }}',
                             verifyQrUrl: '{{ route('missions.verify-qr', $mission) }}',
+                            expectedReference: @js($mission->referencePoint?->reference ?? ''),
                             initialStatus: '{{ $mission->statut }}',
                             initialStartedAt: '{{ optional($mission->started_at)->toIso8601String() }}',
                             initialTotal: {{ (int) ($mission->total_working_time ?? 0) }},
@@ -46,6 +48,45 @@
                             </div>
                             <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700" x-text="statusLabel"></span>
                         </div>
+
+                            <div class="mt-4 rounded-xl border border-emerald-200 bg-emerald-50/70 p-4">
+                                <div class="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
+                                    <div>
+                                        <h4 class="text-sm font-semibold text-slate-800">Lecture du compteur</h4>
+                                        <p class="mt-1 text-xs text-slate-500">Scanner la reference, enregistrer la position GPS exacte et typer le compteur.</p>
+                                    </div>
+                                    <span class="text-xs font-semibold text-emerald-700">Reference attendue: {{ $mission->referencePoint?->reference ?? '—' }}</span>
+                                </div>
+
+                                <div class="mt-3 grid gap-3 lg:grid-cols-3">
+                                    <div class="lg:col-span-2">
+                                        <label for="scan_reference_code" class="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-500">Code scanne</label>
+                                        <input id="scan_reference_code" type="text" x-model="scanReferenceCode" placeholder="Scannez ou saisissez le code" class="w-full rounded-lg border-slate-300 text-sm focus:border-brand-primary focus:ring-brand-primary">
+                                    </div>
+                                    <div>
+                                        <label for="scan_compteur_type" class="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-500">Type compteur</label>
+                                        <select id="scan_compteur_type" x-model="scanCompteurType" class="w-full rounded-lg border-slate-300 text-sm focus:border-brand-primary focus:ring-brand-primary">
+                                            <option value="mechanique">Mecanique</option>
+                                            <option value="electrique">Electrique</option>
+                                            <option value="autre">Autre</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="mt-3 grid gap-3 lg:grid-cols-3">
+                                    <div class="lg:col-span-2">
+                                        <label for="scan_notes" class="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-500">Notes</label>
+                                        <textarea id="scan_notes" x-model="scanNotes" rows="2" placeholder="Etat du compteur, acces, anomalie..." class="w-full rounded-lg border-slate-300 text-sm focus:border-brand-primary focus:ring-brand-primary"></textarea>
+                                    </div>
+                                    <div class="flex flex-col justify-end gap-2">
+                                        <button type="button" @click="scanQrCode()" class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-wider text-slate-700 hover:bg-slate-100">Scanner QR</button>
+                                        <button type="button" @click="saveReferenceScan()" :disabled="scanBusy" class="rounded-lg bg-emerald-600 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-white hover:bg-emerald-700 disabled:opacity-40">Enregistrer la lecture</button>
+                                    </div>
+                                </div>
+
+                                <p class="mt-2 text-xs text-slate-500">La sauvegarde enregistre le code, le type, la position GPS et l'heure de lecture.</p>
+                                <p class="mt-2 text-xs font-medium" :class="scanValid ? 'text-emerald-700' : 'text-rose-700'" x-show="scanMessage" x-text="scanMessage"></p>
+                            </div>
 
                         <div class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-4">
                             <article class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
@@ -76,17 +117,6 @@
 
                         <p class="mt-3 text-xs text-slate-500" x-text="feedback"></p>
                         <p class="mt-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700" x-show="geofenceWarning" x-text="geofenceWarning"></p>
-
-                        <div class="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
-                            <h4 class="text-sm font-semibold text-slate-800">Reference QR verification</h4>
-                            <p class="mt-1 text-xs text-slate-500">Scan or enter the reference code before completion.</p>
-                            <div class="mt-3 flex flex-col gap-2 sm:flex-row">
-                                <input type="text" x-model="qrCode" placeholder="Reference code" class="w-full rounded-lg border-slate-300 text-sm focus:border-brand-primary focus:ring-brand-primary">
-                                <button type="button" @click="scanQr()" class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-wider text-slate-700 hover:bg-slate-100">Scan QR</button>
-                                <button type="button" @click="verifyQr()" class="rounded-lg bg-slate-800 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-white hover:bg-slate-700">Verify QR</button>
-                            </div>
-                            <p class="mt-2 text-xs" :class="qrValid ? 'text-emerald-700' : 'text-rose-700'" x-text="qrMessage"></p>
-                        </div>
 
                         <form class="mt-4 space-y-4 border-t border-slate-200 pt-4" method="POST" action="{{ route('missions.work.update', $mission) }}" enctype="multipart/form-data">
                             @csrf
@@ -124,6 +154,63 @@
                                 </x-primary-button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            @endcan
+
+            @can('work-mission', $mission)
+                <div class="brand-card overflow-hidden">
+                    <div class="p-6 text-slate-900">
+                        <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                            <div>
+                                <h3 class="font-semibold text-slate-800">Derniers scans enregistres</h3>
+                                <p class="mt-1 text-sm text-slate-500">Historique des lectures du compteur avec position et type.</p>
+                            </div>
+                            <span class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-slate-600">
+                                {{ $mission->referenceScans->count() }} lecture(s)
+                            </span>
+                        </div>
+
+                        <div class="mt-4 overflow-x-auto rounded-xl border border-slate-200">
+                            <table class="min-w-full divide-y divide-slate-200">
+                                <thead class="bg-slate-50">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Date</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Code</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Type</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Technicien</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">GPS</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Distance</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Etat</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 bg-white">
+                                    @forelse ($mission->referenceScans->take(5) as $scan)
+                                        <tr class="hover:bg-slate-50/80">
+                                            <td class="px-4 py-3 whitespace-nowrap text-sm text-slate-700">{{ $scan->scanned_at?->format('Y-m-d H:i') }}</td>
+                                            <td class="px-4 py-3 whitespace-nowrap text-sm text-slate-700">{{ $scan->reference_code }}</td>
+                                            <td class="px-4 py-3 whitespace-nowrap text-sm text-slate-700">{{ ucfirst($scan->compteur_type) }}</td>
+                                            <td class="px-4 py-3 whitespace-nowrap text-sm text-slate-700">{{ $scan->technicien?->prenom }} {{ $scan->technicien?->nom }}</td>
+                                            <td class="px-4 py-3 whitespace-nowrap text-sm text-slate-700">{{ number_format((float) $scan->latitude, 6) }}, {{ number_format((float) $scan->longitude, 6) }}</td>
+                                            <td class="px-4 py-3 whitespace-nowrap text-sm text-slate-700">{{ $scan->distance_m !== null ? number_format((float) $scan->distance_m, 1) . ' m' : '—' }}</td>
+                                            <td class="px-4 py-3 whitespace-nowrap text-sm">
+                                                <span @class([
+                                                    'inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold',
+                                                    'bg-emerald-100 text-emerald-800' => $scan->is_match,
+                                                    'bg-rose-100 text-rose-800' => !$scan->is_match,
+                                                ])>
+                                                    {{ $scan->is_match ? 'Valide' : 'Non conforme' }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="7" class="px-4 py-8 text-center text-sm text-slate-500">Aucun scan enregistre pour cette mission.</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             @endcan
@@ -322,14 +409,19 @@
                     estimatedMinutes: config.initialEstimated || 0,
                     onSiteMinutes: config.initialOnSite || 0,
                     travelMinutes: config.initialTravel || 0,
+                    scanReferenceUrl: config.scanReferenceUrl,
+                    expectedReference: config.expectedReference || '',
+                    scanReferenceCode: '',
+                    scanCompteurType: 'electrique',
+                    scanNotes: '',
+                    scanBusy: false,
+                    scanValid: false,
+                    scanMessage: '',
                     busy: false,
                     isRunning: (config.initialStatus || '') === 'En cours',
                     onBreak: false,
                     feedback: '',
                     geofenceWarning: '',
-                    qrCode: '',
-                    qrValid: false,
-                    qrMessage: '',
                     elapsedSeconds: 0,
                     lastActivityAt: Date.now(),
 
@@ -395,39 +487,71 @@
                         await this.logAction('complete', 'check_out');
                     },
 
-                    async verifyQr() {
-                        this.qrMessage = 'Verifying...';
-                        this.qrValid = false;
+                    async saveReferenceScan() {
+                        this.scanBusy = true;
+                        this.scanValid = false;
+                        this.scanMessage = 'Collecte de la position en cours...';
 
                         try {
-                            const response = await fetch(this.verifyQrUrl, {
+                            const position = await this.getCurrentPosition({
+                                enableHighAccuracy: true,
+                                timeout: 10000,
+                                maximumAge: 0,
+                            });
+
+                            if (!position) {
+                                throw new Error('Position GPS indisponible. Autorisez la geolocalisation puis recommencez.');
+                            }
+
+                            const response = await fetch(this.scanReferenceUrl, {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
                                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                                     'Accept': 'application/json',
                                 },
-                                body: JSON.stringify({ qr_code: this.qrCode }),
+                                body: JSON.stringify({
+                                    qr_code: this.scanReferenceCode,
+                                    compteur_type: this.scanCompteurType,
+                                    latitude: position.latitude,
+                                    longitude: position.longitude,
+                                    accuracy_m: position.accuracy,
+                                    notes: this.scanNotes,
+                                }),
                             });
 
                             if (!response.ok) {
-                                throw new Error('QR verification failed');
+                                let message = 'Impossible d\'enregistrer la lecture.';
+                                try {
+                                    const failure = await response.json();
+                                    if (failure.message) {
+                                        message = failure.message;
+                                    }
+                                } catch (error) {
+                                    // Keep default message.
+                                }
+
+                                throw new Error(message);
                             }
 
                             const data = await response.json();
-                            this.qrValid = !!data.valid;
-                            this.qrMessage = this.qrValid
-                                ? 'Reference verified.'
-                                : `Mismatch: expected ${data.expected_reference || 'N/A'}`;
+                            this.scanValid = !!data.valid;
+                            this.scanMessage = data.message || (this.scanValid ? 'Lecture enregistrée.' : 'Lecture enregistrée avec ecart de reference.');
+
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 800);
                         } catch (error) {
-                            this.qrMessage = 'Unable to verify QR.';
-                            this.qrValid = false;
+                            this.scanMessage = error.message || 'Impossible d\'enregistrer la lecture.';
+                            this.scanValid = false;
+                        } finally {
+                            this.scanBusy = false;
                         }
                     },
 
-                    async scanQr() {
+                    async scanQrCode() {
                         if (!('BarcodeDetector' in window)) {
-                            this.qrMessage = 'Scanner not supported on this browser. Enter code manually.';
+                            this.scanMessage = 'Scanner non disponible sur ce navigateur. Saisissez le code manuellement.';
                             return;
                         }
 
@@ -457,13 +581,13 @@
                             stream.getTracks().forEach((track) => track.stop());
 
                             if (found) {
-                                this.qrCode = found;
-                                this.qrMessage = 'QR code captured.';
+                                this.scanReferenceCode = found;
+                                this.scanMessage = 'Code QR capture.';
                             } else {
-                                this.qrMessage = 'No QR detected. Try again.';
+                                this.scanMessage = 'Aucun QR detecte. Reessayez.';
                             }
                         } catch (error) {
-                            this.qrMessage = 'Camera access denied or unavailable.';
+                            this.scanMessage = 'Acces camera refuse ou indisponible.';
                         }
                     },
 
@@ -541,7 +665,7 @@
                         }
                     },
 
-                    getCurrentPosition() {
+                    getCurrentPosition(options = {}) {
                         return new Promise((resolve) => {
                             if (!('geolocation' in navigator)) {
                                 resolve(null);
@@ -553,10 +677,15 @@
                                     resolve({
                                         latitude: position.coords.latitude,
                                         longitude: position.coords.longitude,
+                                        accuracy: position.coords.accuracy ?? null,
                                     });
                                 },
                                 () => resolve(null),
-                                { enableHighAccuracy: false, timeout: 6000, maximumAge: 60000 }
+                                {
+                                    enableHighAccuracy: options.enableHighAccuracy ?? false,
+                                    timeout: options.timeout ?? 6000,
+                                    maximumAge: options.maximumAge ?? 60000,
+                                }
                             );
                         });
                     },

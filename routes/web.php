@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ClientPortalController;
 use App\Http\Controllers\MissionController;
+use App\Http\Controllers\MissionReferenceScanController;
 use App\Http\Controllers\MissionMapController;
 use App\Http\Controllers\MissionTimeTrackingController;
 use App\Http\Controllers\NotificationPreferenceController;
@@ -73,6 +74,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/missions/{mission}/work', [MissionController::class, 'updateWork'])->name('missions.work.update');
     Route::post('/missions/{mission}/time-log', [MissionTimeTrackingController::class, 'log'])->name('missions.time-log');
     Route::post('/missions/{mission}/verify-qr', [MissionController::class, 'verifyQr'])->name('missions.verify-qr');
+    Route::post('/missions/{mission}/reference-scans', [MissionReferenceScanController::class, 'store'])->name('missions.reference-scans');
     Route::get('/missions-analysis', [MissionController::class, 'analysis'])->name('missions.analysis');
     Route::get('/missions-analysis/export', [MissionController::class, 'analysisExportPdf'])->name('missions.analysis.export');
     Route::get('/missions/export-technician-csv', [MissionController::class, 'exportTechnicianCsv'])
