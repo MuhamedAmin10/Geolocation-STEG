@@ -13,6 +13,7 @@ class ReferencePoint extends Model
 
     protected $fillable = [
         'reference',
+        'meter_type',
         'latitude',
         'longitude',
         'adresse',
@@ -31,5 +32,10 @@ class ReferencePoint extends Model
     public function updatedBy()
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    public function collectionScans()
+    {
+        return $this->hasMany(ReferenceCollectionScan::class)->latest('scanned_at');
     }
 }

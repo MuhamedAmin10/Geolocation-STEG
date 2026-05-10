@@ -15,6 +15,7 @@
     $adminMenu = [
         ['label' => 'Dashboard', 'icon' => 'DB', 'route' => 'admin.dashboard', 'fallback' => 'dashboard'],
         ['label' => 'Missions', 'icon' => 'MS', 'route' => 'missions.index', 'badge' => $unassignedCount],
+        ['label' => 'Reference Search', 'icon' => 'RS', 'route' => 'reference.search'],
         ['label' => 'Reference Points', 'icon' => 'RF', 'route' => 'dashboard'],
         ['label' => 'Mission Map', 'icon' => 'MP', 'route' => 'missions.map'],
         ['label' => 'Technicians', 'icon' => 'TC', 'route' => 'admin.techniciens.index'],
@@ -28,6 +29,7 @@
         ['label' => 'Dashboard', 'icon' => 'DB', 'route' => 'dashboard'],
         ['label' => 'Missions', 'icon' => 'MS', 'route' => 'missions.index', 'badge' => $unassignedCount],
         ['label' => 'Create Mission', 'icon' => 'NM', 'route' => 'missions.create'],
+        ['label' => 'Reference Search', 'icon' => 'RS', 'route' => 'reference.search'],
         ['label' => 'Reference Points', 'icon' => 'RF', 'route' => 'dashboard'],
         ['label' => 'Mission Map', 'icon' => 'MP', 'route' => 'missions.map'],
         ['label' => 'Analysis', 'icon' => 'AN', 'route' => 'missions.analysis'],
@@ -36,9 +38,11 @@
     ];
 
     $technicianMenu = [
-        ['label' => 'My Missions', 'icon' => 'MS', 'route' => 'missions.index'],
-        ['label' => "Today's Schedule", 'icon' => 'SC', 'route' => 'missions.index'],
-        ['label' => 'Time Tracker', 'icon' => 'TT', 'route' => 'missions.analysis'],
+        ['label' => 'My Missions', 'icon' => 'MS', 'route' => 'missions.index', 'params' => ['mine' => 1], 'activeQuery' => ['mine' => '1', 'active_scope' => null, 'active_status' => null]],
+        ['label' => 'Reference Search', 'icon' => 'RS', 'route' => 'reference.search'],
+        ['label' => 'Collect References', 'icon' => 'CR', 'route' => 'references.collect'],
+        ['label' => "Today's Schedule", 'icon' => 'SC', 'route' => 'technician.schedule'],
+        ['label' => 'Time Tracker', 'icon' => 'TT', 'route' => 'technician.tracker'],
         ['label' => 'My Performance', 'icon' => 'PR', 'route' => 'missions.analysis'],
         ['label' => 'Notifications', 'icon' => 'NT', 'route' => 'notification-preferences.edit'],
         ['label' => 'Profile', 'icon' => 'PF', 'route' => 'profile.edit'],
@@ -87,8 +91,9 @@
             </div>
         </div>
 
-        <div class="border-b border-slate-800 p-3">
-            @if (in_array($role, ['Admin', 'Dispatcher'], true))
+        @if (in_array($role, ['Admin', 'Dispatcher'], true) || $normalizedRole === 'client')
+            <div class="border-b border-slate-800 p-3">
+                @if (in_array($role, ['Admin', 'Dispatcher'], true))
                 <a
                     href="{{ route('missions.create') }}"
                     class="inline-flex w-full items-center justify-center rounded-xl bg-brand-primary px-3 py-2 text-sm font-semibold text-white transition hover:bg-brand-primary-dark"
@@ -98,7 +103,7 @@
                     <span>+</span>
                     <span class="ml-2" x-show="!sidebarCollapsed" x-transition>New Mission</span>
                 </a>
-            @elseif ($normalizedRole === 'client')
+                @elseif ($normalizedRole === 'client')
                 <a
                     href="{{ route('client.portal') }}"
                     class="inline-flex w-full items-center justify-center rounded-xl bg-brand-primary px-3 py-2 text-sm font-semibold text-white transition hover:bg-brand-primary-dark"
@@ -108,27 +113,39 @@
                     <span>CP</span>
                     <span class="ml-2" x-show="!sidebarCollapsed" x-transition>Client Portal</span>
                 </a>
-            @else
-                <a
-                    href="{{ route('missions.index', ['mine' => 1]) }}"
-                    class="inline-flex w-full items-center justify-center rounded-xl bg-brand-primary px-3 py-2 text-sm font-semibold text-white transition hover:bg-brand-primary-dark"
-                    :class="sidebarCollapsed ? 'px-0' : ''"
-                    title="My Missions"
-                >
-                    <span>MS</span>
-                    <span class="ml-2" x-show="!sidebarCollapsed" x-transition>My Missions</span>
-                </a>
-            @endif
-        </div>
+                @endif
+            </div>
+        @endif
 
         <nav class="flex-1 space-y-1 overflow-y-auto p-2">
             @foreach ($menu as $item)
                 @php
                     $targetRoute = Route::has($item['route']) ? $item['route'] : ($item['fallback'] ?? 'dashboard');
-                    $isActive = request()->routeIs($targetRoute) || ($targetRoute === 'missions.index' && request()->routeIs('missions.*'));
+                    $routeParams = $item['params'] ?? [];
+                    $activeQuery = $item['activeQuery'] ?? null;
+                    $isActive = request()->routeIs($targetRoute);
+
+                    if ($isActive && is_array($activeQuery)) {
+                        foreach ($activeQuery as $queryKey => $expectedValue) {
+                            $actualValue = request()->query($queryKey);
+
+                            if ($expectedValue === null) {
+                                if ($actualValue !== null && $actualValue !== '') {
+                                    $isActive = false;
+                                    break;
+                                }
+                                continue;
+                            }
+
+                            if ((string) $actualValue !== (string) $expectedValue) {
+                                $isActive = false;
+                                break;
+                            }
+                        }
+                    }
                 @endphp
                 <a
-                    href="{{ route($targetRoute) }}"
+                    href="{{ route($targetRoute, $routeParams) }}"
                     class="group flex items-center rounded-xl px-2 py-2 text-sm font-medium transition"
                     :class="sidebarCollapsed ? 'justify-center' : 'justify-between'"
                     @class([

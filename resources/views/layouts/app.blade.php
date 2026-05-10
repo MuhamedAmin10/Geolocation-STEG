@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <meta name="theme-color" content="#0057b8">
+        <meta name="theme-color" content="#0369a1">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="default">
         <link rel="manifest" href="{{ asset('manifest.json') }}">
@@ -38,16 +38,21 @@
             </div>
 
             <div class="min-w-0 flex-1">
-                <div class="flex items-center justify-between border-b border-slate-200 bg-white/80 px-4 py-3 backdrop-blur lg:hidden">
+                <div class="flex items-center justify-between border-b border-slate-200 bg-white/90 px-4 py-3 shadow-sm backdrop-blur lg:hidden">
                     <button
                         type="button"
-                        class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700"
+                        class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 transition hover:bg-slate-50"
                         @click="mobileOpen = true"
+                        aria-label="Open menu"
                     >
-                        =
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M4 6h16"></path>
+                            <path d="M4 12h16"></path>
+                            <path d="M4 18h10"></path>
+                        </svg>
                     </button>
-                    <div class="text-sm font-semibold text-slate-800">Mission Manager</div>
-                    <a href="{{ route('profile.edit') }}" class="text-sm text-slate-600">{{ auth()->user()?->name }}</a>
+                    <div class="text-sm font-semibold tracking-wide text-slate-800">Mission Manager</div>
+                    <a href="{{ route('profile.edit') }}" class="text-sm font-medium text-slate-600 hover:text-slate-900">{{ auth()->user()?->name }}</a>
                 </div>
 
                 @isset($header)
@@ -58,7 +63,7 @@
                     </header>
                 @endisset
 
-                <main>
+                <main class="pb-8">
                     {{ $slot }}
                 </main>
             </div>

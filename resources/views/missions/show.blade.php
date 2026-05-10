@@ -86,6 +86,22 @@
 
                                 <p class="mt-2 text-xs text-slate-500">La sauvegarde enregistre le code, le type, la position GPS et l'heure de lecture.</p>
                                 <p class="mt-2 text-xs font-medium" :class="scanValid ? 'text-emerald-700' : 'text-rose-700'" x-show="scanMessage" x-text="scanMessage"></p>
+
+                                <div x-show="scanning" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4" @click.self="stopScanner()">
+                                    <div class="w-full max-w-xl rounded-2xl bg-slate-900 p-4 shadow-2xl">
+                                        <div class="mb-3 flex items-center justify-between text-slate-100">
+                                            <h4 class="text-sm font-semibold uppercase tracking-wider">Scanner QR</h4>
+                                            <button type="button" @click="stopScanner()" class="rounded-lg border border-slate-600 px-3 py-1 text-xs font-semibold text-slate-200 hover:bg-slate-800">Fermer</button>
+                                        </div>
+                                        <div class="relative overflow-hidden rounded-xl border border-slate-700 bg-black">
+                                            <video x-ref="scannerVideo" autoplay playsinline muted class="h-[26rem] w-full object-cover"></video>
+                                            <div class="pointer-events-none absolute inset-0 flex items-center justify-center">
+                                                <div class="h-52 w-52 rounded-2xl border-2 border-emerald-400/90 shadow-[0_0_0_9999px_rgba(2,6,23,0.45)]"></div>
+                                            </div>
+                                        </div>
+                                        <p class="mt-3 text-xs text-slate-300">Alignez le QR code dans le cadre pour detection automatique.</p>
+                                    </div>
+                                </div>
                             </div>
 
                         <div class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-4">
@@ -417,6 +433,8 @@
                     scanBusy: false,
                     scanValid: false,
                     scanMessage: '',
+                    scanning: false,
+                    scannerStream: null,
                     busy: false,
                     isRunning: (config.initialStatus || '') === 'En cours',
                     onBreak: false,
@@ -550,35 +568,13 @@
                     },
 
                     async scanQrCode() {
-                        if (!('BarcodeDetector' in window)) {
-                            this.scanMessage = 'Scanner non disponible sur ce navigateur. Saisissez le code manuellement.';
-                            return;
-                        }
+                        this.scanMessage = 'Demarrage du scanner...';
 
                         try {
-                            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-                            const video = document.createElement('video');
-                            video.srcObject = stream;
-                            await video.play();
-
-                            const detector = new BarcodeDetector({ formats: ['qr_code'] });
-                            const canvas = document.createElement('canvas');
-                            canvas.width = video.videoWidth || 640;
-                            canvas.height = video.videoHeight || 480;
-                            const context = canvas.getContext('2d');
-
-                            let found = null;
-                            for (let i = 0; i < 30; i += 1) {
-                                context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                                const codes = await detector.detect(canvas);
-                                if (codes.length > 0 && codes[0].rawValue) {
-                                    found = codes[0].rawValue;
-                                    break;
-                                }
-                                await new Promise((resolve) => setTimeout(resolve, 100));
-                            }
-
-                            stream.getTracks().forEach((track) => track.stop());
+                            const video = await this.startScanner();
+                            const found = 'BarcodeDetector' in window
+                                ? await this.scanWithBarcodeDetector(video)
+                                : await this.scanWithJsQrFallback(video);
 
                             if (found) {
                                 this.scanReferenceCode = found;
@@ -587,8 +583,117 @@
                                 this.scanMessage = 'Aucun QR detecte. Reessayez.';
                             }
                         } catch (error) {
-                            this.scanMessage = 'Acces camera refuse ou indisponible.';
+                            this.scanMessage = error.message || 'Acces camera refuse ou indisponible.';
+                        } finally {
+                            this.stopScanner();
                         }
+                    },
+
+                    async startScanner() {
+                        this.stopScanner();
+
+                        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                        this.scannerStream = stream;
+                        this.scanning = true;
+
+                        await this.$nextTick();
+
+                        const video = this.$refs.scannerVideo;
+                        if (!video) {
+                            throw new Error('Apercu camera indisponible.');
+                        }
+
+                        video.srcObject = stream;
+                        await video.play();
+
+                        return video;
+                    },
+
+                    stopScanner() {
+                        if (this.scannerStream) {
+                            this.scannerStream.getTracks().forEach((track) => track.stop());
+                            this.scannerStream = null;
+                        }
+                        this.scanning = false;
+                    },
+
+                    async scanWithBarcodeDetector(video) {
+                        let found = null;
+
+                        const detector = new BarcodeDetector({ formats: ['qr_code'] });
+                        const canvas = document.createElement('canvas');
+                        canvas.width = video.videoWidth || 720;
+                        canvas.height = video.videoHeight || 960;
+                        const context = canvas.getContext('2d');
+
+                        for (let i = 0; i < 80 && this.scanning; i += 1) {
+                            if (!context) {
+                                break;
+                            }
+
+                            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                            const codes = await detector.detect(canvas);
+                            if (codes.length > 0 && codes[0].rawValue) {
+                                found = codes[0].rawValue;
+                                break;
+                            }
+                            await new Promise((resolve) => setTimeout(resolve, 100));
+                        }
+
+                        return found;
+                    },
+
+                    async ensureJsQr() {
+                        if (window.jsQR) {
+                            return;
+                        }
+
+                        await new Promise((resolve, reject) => {
+                            const src = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js';
+
+                            if (document.querySelector(`script[src="${src}"]`)) {
+                                resolve();
+                                return;
+                            }
+
+                            const script = document.createElement('script');
+                            script.src = src;
+                            script.async = true;
+                            script.onload = () => resolve();
+                            script.onerror = () => reject(new Error('Chargement du decodeur QR impossible.'));
+                            document.head.appendChild(script);
+                        });
+                    },
+
+                    async scanWithJsQrFallback(video) {
+                        await this.ensureJsQr();
+
+                        const canvas = document.createElement('canvas');
+                        canvas.width = video.videoWidth || 720;
+                        canvas.height = video.videoHeight || 960;
+                        const context = canvas.getContext('2d', { willReadFrequently: true });
+
+                        let found = null;
+                        for (let i = 0; i < 100 && this.scanning; i += 1) {
+                            if (!context) {
+                                break;
+                            }
+
+                            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                            const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                            const code = window.jsQR(imageData.data, canvas.width, canvas.height, {
+                                inversionAttempts: 'dontInvert',
+                            });
+
+                            if (code && code.data) {
+                                found = code.data;
+                                break;
+                            }
+
+                            await new Promise((resolve) => setTimeout(resolve, 100));
+                        }
+
+                        return found;
                     },
 
                     async logAction(action, note = null) {

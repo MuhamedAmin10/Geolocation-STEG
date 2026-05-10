@@ -8,26 +8,56 @@
 	}
 
 	:root {
-		--steg-blue: #0057b8;
-		--steg-blue-strong: #00489a;
-		--steg-red: #e30613;
-		--steg-surface: #f3f7fb;
+		--steg-brand-950: #082f49;
+		--steg-brand-900: #0c4a6e;
+		--steg-brand-800: #075985;
+		--steg-brand-700: #0369a1;
+		--steg-brand-600: #0284c7;
+		--steg-brand-500: #0ea5e9;
+		--steg-accent-500: #e76f51;
+		--steg-success-500: #2a9d8f;
+		--steg-page: #f0f9ff;
+		--steg-surface: #ffffff;
+		--steg-surface-soft: #e0f2fe;
+		--steg-border: #bae6fd;
+		--steg-text: #0f172a;
+		--steg-muted: #516273;
 	}
 
 	body {
-		@apply bg-slate-100 text-slate-900;
+		@apply antialiased;
+		background: radial-gradient(circle at 100% -10%, #bae6fd 0%, transparent 40%),
+			linear-gradient(180deg, #f0f9ff 0%, var(--steg-page) 48%, #e0f2fe 100%);
+		color: var(--steg-text);
+	}
+
+	a {
+		@apply transition-colors duration-150;
 	}
 
 	.theme-dark body,
 	body.theme-dark {
-		background: #020617;
+		background: radial-gradient(circle at 0% 0%, #0c4a6e 0%, #0f172a 48%, #020617 100%);
 		color: #e2e8f0;
+	}
+
+	input,
+	select,
+	textarea {
+		@apply rounded-xl border-slate-300 text-slate-800 shadow-sm;
+	}
+
+	input:focus,
+	select:focus,
+	textarea:focus {
+		border-color: var(--steg-brand-600) !important;
+		ring-color: var(--steg-brand-600) !important;
 	}
 }
 
 @layer components {
 	.brand-shell {
-		background: linear-gradient(180deg, #f7fbff 0%, #eef5fc 100%);
+		background: linear-gradient(180deg, #f0f9ff 0%, #e0f2fe 100%);
 	}
 
 	.theme-dark .brand-shell {
@@ -35,7 +65,8 @@
 	}
 
 	.brand-card {
-		@apply rounded-2xl border border-slate-200 bg-white shadow-sm;
+		@apply rounded-2xl border bg-white shadow-sm;
+		border-color: var(--steg-border);
 	}
 
 	.theme-dark .brand-card {
@@ -44,6 +75,74 @@
 
 	.brand-title {
 		@apply font-semibold tracking-tight text-slate-900;
+	}
+
+	.page-header {
+		@apply rounded-2xl border p-6 shadow-sm;
+		border-color: #d7e3ee;
+		background: linear-gradient(120deg, var(--steg-brand-950) 0%, var(--steg-brand-800) 48%, var(--steg-brand-600) 100%);
+	}
+
+	.page-header p,
+	.page-header h2,
+	.page-header h3 {
+		@apply text-white;
+	}
+
+	.panel-card {
+		@apply rounded-2xl border bg-white shadow-sm;
+		border-color: var(--steg-border);
+	}
+
+	.panel-head {
+		@apply flex flex-wrap items-center justify-between gap-3 border-b px-5 py-4;
+		border-color: #e2e8f0;
+		background: linear-gradient(180deg, #fbfdff 0%, #f3f8fc 100%);
+	}
+
+	.panel-head h3 {
+		@apply text-sm font-semibold uppercase tracking-[0.18em] text-slate-700;
+	}
+
+	.panel-head p {
+		@apply text-xs text-slate-500;
+	}
+
+	.btn-primary {
+		@apply inline-flex items-center justify-center rounded-xl px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white shadow-sm;
+		background: linear-gradient(135deg, var(--steg-brand-700) 0%, var(--steg-brand-500) 100%);
+	}
+
+	.btn-primary:hover {
+		filter: brightness(0.96);
+	}
+
+	.btn-secondary {
+		@apply inline-flex items-center justify-center rounded-xl border bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-slate-700;
+		border-color: #cbd9e5;
+	}
+
+	.btn-secondary:hover {
+		@apply bg-slate-50;
+	}
+
+	.kpi-tile {
+		@apply rounded-xl border px-4 py-3;
+		border-color: #d8e3ed;
+		background: #f7fbfe;
+	}
+
+	.kpi-label {
+		@apply text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-500;
+	}
+
+	.kpi-value {
+		@apply mt-1 text-2xl font-semibold text-slate-900;
+	}
+
+	.table-shell {
+		@apply overflow-x-auto rounded-xl border;
+		border-color: #d9e4ed;
 	}
 
 	/* Force readable dropdown surfaces for Tom Select lists. */

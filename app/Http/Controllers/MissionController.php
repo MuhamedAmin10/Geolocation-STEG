@@ -252,6 +252,74 @@ class MissionController extends Controller
         return view('missions.analysis', $this->buildAnalysisData($request));
     }
 
+    public function technicianSchedule(Request $request)
+    {
+        $technicienId = $this->resolveTechnicienId($request);
+
+        $baseQuery = Mission::query()
+            ->with(['referencePoint:id,reference,adresse'])
+            ->whereHas('affectations', function ($q) use ($technicienId) {
+                $q->where('technicien_id', $technicienId);
+            })
+            ->where('statut', '!=', 'Terminée');
+
+        $todayMissions = (clone $baseQuery)
+            ->whereDate('due_at', now()->toDateString())
+            ->orderBy('due_at')
+            ->get();
+
+        $overdueMissions = (clone $baseQuery)
+            ->whereNotNull('due_at')
+            ->where('due_at', '<', now())
+            ->orderBy('due_at')
+            ->get();
+
+        $weekMissions = (clone $baseQuery)
+            ->whereBetween('due_at', [now()->startOfWeek(), now()->endOfWeek()])
+            ->orderBy('due_at')
+            ->get();
+
+        $noDueMissions = (clone $baseQuery)
+            ->whereNull('due_at')
+            ->orderByDesc('created_at')
+            ->limit(20)
+            ->get();
+
+        return view('missions.schedule', compact('todayMissions', 'overdueMissions', 'weekMissions', 'noDueMissions'));
+    }
+
+    public function technicianTimeTracker(Request $request)
+    {
+        $technicienId = $this->resolveTechnicienId($request);
+
+        $activeMissions = Mission::query()
+            ->with(['referencePoint:id,reference,adresse'])
+            ->whereHas('affectations', function ($q) use ($technicienId) {
+                $q->where('technicien_id', $technicienId);
+            })
+            ->where('statut', '!=', 'Terminée')
+            ->orderByDesc('started_at')
+            ->orderByDesc('created_at')
+            ->limit(40)
+            ->get();
+
+        $recentLogs = MissionTimeLog::query()
+            ->with('mission.referencePoint:id,reference')
+            ->where('technician_id', $technicienId)
+            ->latest('logged_at')
+            ->limit(30)
+            ->get();
+
+        $summary = [
+            'running' => $activeMissions->where('statut', 'En cours')->count(),
+            'blocked' => $activeMissions->where('statut', 'Bloquée')->count(),
+            'total_minutes' => $activeMissions->sum(fn (Mission $mission): int => (int) ($mission->total_working_time ?? 0)),
+            'on_site_minutes' => $activeMissions->sum(fn (Mission $mission): int => (int) ($mission->on_site_time_minutes ?? 0)),
+        ];
+
+        return view('missions.time-tracker', compact('activeMissions', 'recentLogs', 'summary'));
+    }
+
     public function create(Request $request)
     {
         Gate::authorize('manage-missions');
@@ -758,6 +826,20 @@ class MissionController extends Controller
             'idleMinutes' => $idleMinutes,
             'breakMinutes' => $breakMinutes,
         ];
+    }
+
+    private function resolveTechnicienId(Request $request): int
+    {
+        $role = strtolower(trim((string) ($request->user()?->role ?? '')));
+        abort_unless($role === 'technicien', 403);
+
+        $technicienId = Technicien::query()
+            ->where('user_id', $request->user()->id)
+            ->value('id');
+
+        abort_unless($technicienId, 404, 'Profil technicien introuvable.');
+
+        return (int) $technicienId;
     }
 
     private function resolveRange(array $validated): array

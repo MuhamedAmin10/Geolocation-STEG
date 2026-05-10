@@ -16,22 +16,22 @@
             </div>
 
             <div class="flex items-center gap-3">
-                <span class="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">
+                <span class="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-800">
                     Total: {{ $headerTotal }}
                 </span>
 
                 @if (auth()->user()?->role === 'Technicien')
-                    <a href="{{ route('missions.index', ['mine' => 1]) }}" class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-wider text-slate-700 transition hover:bg-slate-50">
+                    <a href="{{ route('missions.index', ['mine' => 1]) }}" class="btn-secondary">
                         Historique pour moi
                     </a>
 
-                    <a href="{{ route('missions.analysis') }}" class="inline-flex items-center rounded-xl border border-amber-300 bg-amber-50 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-amber-700 transition hover:bg-amber-100">
+                    <a href="{{ route('missions.analysis') }}" class="btn-secondary">
                         Analyse de travail
                     </a>
                 @endif
 
                 @can('manage-missions')
-                    <a href="{{ route('missions.create') }}" class="inline-flex items-center rounded-xl bg-brand-primary px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white shadow-sm transition hover:bg-brand-primary-dark focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2">
+                    <a href="{{ route('missions.create') }}" class="btn-primary">
                         {{ __('Créer une mission') }}
                     </a>
                 @endcan
@@ -71,17 +71,17 @@
                     @endif
 
                     <div class="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
-                        <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                            <div class="text-xs uppercase tracking-wider text-slate-500">Total</div>
-                            <div class="mt-1 text-xl font-semibold text-slate-900">{{ $totalMissions }}</div>
+                        <div class="kpi-tile">
+                            <div class="kpi-label">Total</div>
+                            <div class="kpi-value">{{ $totalMissions }}</div>
                         </div>
-                        <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-                            <div class="text-xs uppercase tracking-wider text-amber-700">Non terminées</div>
-                            <div class="mt-1 text-xl font-semibold text-amber-800">{{ $isTechnicien ? $activeMissions->total() : $missions->where('statut', '!=', 'Terminée')->count() }}</div>
+                        <div class="kpi-tile border-amber-200 bg-amber-50">
+                            <div class="kpi-label text-amber-700">Non terminées</div>
+                            <div class="kpi-value text-amber-800">{{ $isTechnicien ? $activeMissions->total() : $missions->where('statut', '!=', 'Terminée')->count() }}</div>
                         </div>
-                        <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
-                            <div class="text-xs uppercase tracking-wider text-emerald-700">Terminées</div>
-                            <div class="mt-1 text-xl font-semibold text-emerald-800">{{ $isTechnicien ? $completedMissions->total() : $missions->where('statut', 'Terminée')->count() }}</div>
+                        <div class="kpi-tile border-emerald-200 bg-emerald-50">
+                            <div class="kpi-label text-emerald-700">Terminées</div>
+                            <div class="kpi-value text-emerald-800">{{ $isTechnicien ? $completedMissions->total() : $missions->where('statut', 'Terminée')->count() }}</div>
                         </div>
                     </div>
 

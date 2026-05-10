@@ -13,10 +13,10 @@ export default {
         extend: {
             colors: {
                 brand: {
-                    primary: '#0057b8',
-                    primaryDark: '#00489a',
-                    accent: '#e30613',
-                    surface: '#f3f7fb',
+                    primary: '#0369a1',
+                    primaryDark: '#075985',
+                    accent: '#e76f51',
+                    surface: '#f0f9ff',
                 },
             },
             fontFamily: {

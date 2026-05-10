@@ -7,6 +7,7 @@ use App\Http\Controllers\MissionReferenceScanController;
 use App\Http\Controllers\MissionMapController;
 use App\Http\Controllers\MissionTimeTrackingController;
 use App\Http\Controllers\NotificationPreferenceController;
+use App\Http\Controllers\ReferenceCollectionController;
 use App\Http\Controllers\ReferencePointController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\ReclamationController as AdminReclamationController;
@@ -29,9 +30,8 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-// Legacy redirect: old search URL now goes to dashboard
 Route::get('/references/search', function () {
-    return redirect()->route('dashboard');
+    return view('references.search');
 })->middleware(['auth'])->name('reference.search');
 
 Route::middleware('auth')->group(function () {
@@ -55,6 +55,11 @@ Route::middleware('auth')->group(function () {
         ->middleware('throttle:30,1')
         ->name('api.reference.show');
 
+    Route::get('/references/collect', [ReferenceCollectionController::class, 'index'])
+        ->name('references.collect');
+    Route::post('/references/collect', [ReferenceCollectionController::class, 'store'])
+        ->name('references.collect.store');
+
     Route::get('/reference-points/create', [ReferencePointController::class, 'create'])
         ->middleware('can:manage-references')
         ->name('reference-points.create');
@@ -75,6 +80,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/missions/{mission}/time-log', [MissionTimeTrackingController::class, 'log'])->name('missions.time-log');
     Route::post('/missions/{mission}/verify-qr', [MissionController::class, 'verifyQr'])->name('missions.verify-qr');
     Route::post('/missions/{mission}/reference-scans', [MissionReferenceScanController::class, 'store'])->name('missions.reference-scans');
+    Route::get('/technician/schedule', [MissionController::class, 'technicianSchedule'])->name('technician.schedule');
+    Route::get('/technician/time-tracker', [MissionController::class, 'technicianTimeTracker'])->name('technician.tracker');
     Route::get('/missions-analysis', [MissionController::class, 'analysis'])->name('missions.analysis');
     Route::get('/missions-analysis/export', [MissionController::class, 'analysisExportPdf'])->name('missions.analysis.export');
     Route::get('/missions/export-technician-csv', [MissionController::class, 'exportTechnicianCsv'])

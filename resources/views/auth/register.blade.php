@@ -1,6 +1,6 @@
 <x-guest-layout>
-    <div class="mb-6 rounded-2xl border border-slate-200 bg-slate-50 p-5">
-        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Nouveau client</p>
+    <div class="mb-6 rounded-2xl border border-sky-100 bg-gradient-to-r from-sky-100/60 to-sky-50 p-5">
+        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-sky-800">Nouveau client</p>
         <h2 class="mt-1 text-lg font-bold text-slate-900">Créer un compte client STEG</h2>
         <p class="mt-2 text-sm text-slate-600">Ce compte vous donne accès au portail client pour déposer une réclamation et suivre son traitement.</p>
     </div>
@@ -46,7 +46,7 @@
         </div>
 
         <div class="flex items-center justify-end mt-4">
-            <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('login') }}">
+            <a class="rounded-md text-sm text-slate-600 underline hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-600 focus:ring-offset-2" href="{{ route('login') }}">
                 {{ __('Already registered?') }}
             </a>
 

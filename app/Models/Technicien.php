@@ -38,4 +38,9 @@ class Technicien extends Model
     {
         return $this->hasMany(MissionReferenceScan::class)->latest('scanned_at');
     }
+
+    public function referenceCollectionScans()
+    {
+        return $this->hasMany(ReferenceCollectionScan::class)->latest('scanned_at');
+    }
 }

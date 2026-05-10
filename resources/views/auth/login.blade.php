@@ -1,7 +1,7 @@
 <x-guest-layout>
-    <div class="mb-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div class="bg-gradient-to-r from-sky-50 via-white to-rose-50 px-5 py-4">
-            <div class="inline-flex items-center rounded-full border border-sky-200 bg-sky-50/80 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.22em] text-sky-700">
+    <div class="mb-6 overflow-hidden rounded-2xl border border-sky-100 bg-white shadow-sm">
+        <div class="bg-gradient-to-r from-sky-100 via-white to-sky-50 px-5 py-4">
+            <div class="inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.22em] text-sky-800">
                 Espace client
             </div>
             <h2 class="mt-3 text-[1.9rem] font-extrabold leading-tight text-slate-900 sm:text-[2.1rem]">
@@ -13,13 +13,13 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-3 border-t border-slate-100 px-5 py-4">
-            <a href="{{ route('register') }}" class="inline-flex items-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700">
+            <a href="{{ route('register') }}" class="btn-primary text-[11px]">
                 Créer un compte client
             </a>
             <button
                 type="button"
                 onclick="document.getElementById('login-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); document.getElementById('email')?.focus();"
-                class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                class="btn-secondary text-[11px]"
             >
                 Se connecter
             </button>
@@ -54,14 +54,14 @@
         <!-- Remember Me -->
         <div class="block mt-4">
             <label for="remember_me" class="inline-flex items-center">
-                <input id="remember_me" type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" name="remember">
-                <span class="ms-2 text-sm text-gray-600">{{ __('Remember me') }}</span>
+                <input id="remember_me" type="checkbox" class="rounded border-slate-300 text-sky-700 shadow-sm focus:ring-sky-600" name="remember">
+                <span class="ms-2 text-sm text-slate-600">{{ __('Remember me') }}</span>
             </label>
         </div>
 
         <div class="flex items-center justify-end mt-4">
             @if (Route::has('password.request'))
-                <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('password.request') }}">
+                <a class="rounded-md text-sm text-slate-600 underline hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-600 focus:ring-offset-2" href="{{ route('password.request') }}">
                     {{ __('Forgot your password?') }}
                 </a>
             @endif
